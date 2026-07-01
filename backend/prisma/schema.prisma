@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String @id @default(cuid())
+  fullName     String
+  email        String @unique
+  passwordHash String
+
+  role Role @default(ADVISOR)
+  activities LeadActivity[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leads     Lead[]
+}
+
+model Lead {
+  id String @id @default(cuid())
+
+  fullName String
+  mobile   String
+  email    String?
+  city     String?
+
+  source            LeadSource  @default(MANUAL)
+  serviceInterested LeadService
+  status            LeadStatus  @default(NEW)
+
+  notes String?
+
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
+  activities LeadActivity[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  ADVISOR
+  EMPLOYEE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  MEETING
+  INTERESTED
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum LeadSource {
+  WEBSITE
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  REFERRAL
+  WALK_IN
+  PROPERTY
+  MANUAL
+}
+
+enum LeadService {
+  MUTUAL_FUND
+  HEALTH_INSURANCE
+  LIC
+  TERM_INSURANCE
+  PROPERTY
+  FINANCIAL_PLANNING
+  LOAN
+  OTHER
+}
+enum ActivityType {
+  NOTE
+  CALL
+  WHATSAPP
+  EMAIL
+  MEETING
+  FOLLOW_UP
+  DOCUMENT
+  STATUS_CHANGE
+}
+model LeadActivity {
+  id String @id @default(cuid())
+
+  leadId String
+  lead   Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User? @relation(fields: [userId], references: [id])
+
+  type ActivityType
+
+  title String
+  description String?
+
+  nextFollowUp DateTime?
+
+  createdAt DateTime @default(now())
+}
